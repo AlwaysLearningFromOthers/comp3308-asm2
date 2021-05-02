@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import csv
+from random import shuffle, seed
 
 
 
@@ -12,7 +13,17 @@ def read_file():
     
     return rows
 
+#step: how many folds in total
+def train_test_split(step):
+    seed(20210501)
+    num = [i for i in range(768)]
+    shuffle(num)
+    b = [num[i:i+step] for i in range(0,len(num),step)]
 
+
+
+
+# train test are both vectors in Euclidean
 def Euclidean_distance(train_data,test_data):
 	sum = 0
 	for i in range(0,len(test_data)):
