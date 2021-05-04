@@ -7,10 +7,11 @@ from random import shuffle, seed
 
 n_yes = 0
 n_no = 0
-
-def read_file():
+pima ="pima.csv"
+pima_folds = "pima-folds"
+def read_file(fname):
     cwd = os.getcwd()
-    with open(cwd + "/pima.csv") as f:
+    with open(cwd + "/" +fname) as f:
         reader = csv.reader(f)
         data = [row for row in reader]
     
@@ -40,8 +41,8 @@ def create_pima_folds_csv(data:list,fold:int):
     test = dataset_split_data[0]
     for _data in dataset_split_data:
         train.append(_data)
-    with open('pima-folds.csv', 'w', newline='') as myfile:
-        wr = csv.writer(myfile, quoting=csv.QUOTE_NONE)
+    with open('pima-folds.csv', 'w', newline='') as f:
+        wr = csv.writer(f, quoting=csv.QUOTE_NONE)
         i = 1
         for fold in train:
             wr.writerow(["fold"+str(i)])
@@ -53,15 +54,12 @@ def create_pima_folds_csv(data:list,fold:int):
 def train_test_split(fname,index):
     train = []
     test = []
-    cwd = os.getcwd()
-    with open(cwd+"/"+fname,"r") as f:
-        reader = csv.reader(f)
-        data = [row for row in reader]
+    data = read_file(fname)
     for line in data:
-        if ''.join(line).startswith('fold') and int(''.join(line)[-1])!= index:
+        if ''.join(line).startswith('fold') and int(''.join(line)[-1])!= int(str(index)[-1]):
             set = 0
             continue
-        if ''.join(line).startswith('fold') and int(''.join(line)[-1])== index:
+        if ''.join(line).startswith('fold') and int(''.join(line)[-1])== int(str(index)[-1]):
             set = 1
             continue
         if set==0:
@@ -76,48 +74,50 @@ def train_test_split(fname,index):
 # train test are both vectors in Euclidean
 def Euclidean_distance(train_data:list,test_data:list):
 	sum = 0
-	for i in range(0,len(test_data)-1):
+	for i in range(0,len(train_data)-1):
 		sum = sum + np.power(float(train_data[i])-float(test_data[i]),2)
 
 	return np.sqrt(sum)
 
 
 #KNN Model    
-def KNN(k,train, test_data):
-    select_distance = []
-    
-    for instance in train:
-        distance = Euclidean_distance(instance,test_data)
-        select_distance.append({"distance":distance,"class":instance[-1]})
+def KNN(k,train, test):
+    predict = []
+    for test_data in test:
+        select_distance = []
+        for instance in train:
+            distance = Euclidean_distance(instance,test_data)
+            select_distance.append({"distance":distance,"class":instance[-1]})
 
-    selected  = []
-    for dic in select_distance:
-        #if there are not enough k instance in selected, add new ones in to it.
-        if (len(selected) < k):
-            selected.append(dic)
-            selected = sorted(selected,key=itemgetter("distance"),reverse=True)
-        # if the amount is more than k, compare 
+        selected  = []
+        for dic in select_distance:
+            #if there are not enough k instance in selected, add new ones in to it.
+            if (len(selected) < k):
+                selected.append(dic)
+                selected = sorted(selected,key=itemgetter("distance"),reverse=True)
+            # if the amount is more than k, compare 
+            else:
+                for new in selected:
+                    if dic["distance"] < new["distance"]:
+                        new["distance"] = dic["distance"]
+                        new["class"] = dic["class"]
+                        break
+                selected = sorted(selected,key=itemgetter("distance"),reverse=True)
+
+        #detect label for test data
+        n_yes = 0
+        n_no = 0
+        for one in selected:
+            if one["class"] == "yes":
+                n_yes += 1
+            elif one["class"] == "no":
+                n_no += 1
+        
+        if n_yes >= n_no:
+            predict.append("yes")
         else:
-            for new in selected:
-                if dic["distance"] < new["distance"]:
-                    new["distance"] = dic["distance"]
-                    new["class"] = dic["class"]
-                    break
-            selected = sorted(selected,key=itemgetter("distance"),reverse=True)
-
-    #detect label for test data
-    n_yes = 0
-    n_no = 0
-    for one in selected:
-        if one["class"] == "yes":
-            n_yes += 1
-        elif one["class"] == "no":
-            n_no += 1
-    if n_yes >= n_no:
-        print("yes")
-    else:
-        print("no")
-
+            predict.append("no")
+    return predict
 
 # mean of yes and no for one column
 def mean(data, col):
@@ -170,20 +170,19 @@ def probability_density(x, mean, sd):
 #Naive Bayes Model
 def NB(train,test):
     #for every instance in test dataset
+    predict=[]
     for instance in test:
         m = []
         sd = []
         prob_yes = []
         prob_no = []
-
-        for col in range(0,len(instance)):
+        for col in range(0,len(train[0])-1):
             m.append(mean(train, col))
             sd.append(standard_deviation(train,col,mean(train, col)))
-
-        for col in range(0,len(instance)):
+        for col in range(0,len(train[0])-1):
             prob_yes.append(probability_density(instance[col],m[col][0],sd[col][0]))
             prob_no.append(probability_density(instance[col],m[col][1],sd[col][1]))
-
+        #compare with train    
         num_yes = 0
         num_no = 0
         for instance in train:
@@ -191,7 +190,7 @@ def NB(train,test):
                 num_yes += 1
             else:
                 num_no += 1
-
+        #calculate probability for labels
         x_yes = num_yes/len(train)
         x_no = num_no/len(train)
         for p in prob_yes:
@@ -200,18 +199,52 @@ def NB(train,test):
         for p in prob_no:
             if p != 0:
                 x_no = x_no * p
-
+        #prediction labels
         if x_no > x_yes:
-            print("no")
+            predict.append("no")
         else:
-            print("yes")
+            predict.append("yes")
+    return predict
 
 
+#performance of models
+def accuracy(train_set:list,test_set:list,model:str):
+    #split the data
+    label = [i[-1] for i in test_set]
+    num_same = 0
+    #prediction based on model
+    if str(model).endswith("NN"):  
+        k = int(model[0])
+        predict = KNN(k,train_set, test_set)
+    elif model == "NB":
+        predict = NB(train_set,test_set)
+    #accuracy og model
+    for i in range(0,len(predict)):
+            if predict[i] == label[i]:
+                num_same += 1
+    perc = num_same/len(predict)
+    return perc
+
+def cross_validation(fname,model,fold):
+    percent_vector = []
+    for i in range(1,fold):
+        train_set,test_set = train_test_split(fname,i)
+        percentage = accuracy(train_set, test_set, model)
+        percent_vector.append(percentage)
+    return np.mean(percent_vector)
+
+def print_prediction(predict):
+    for pred in predict:
+        print(pred)
 
 
 if __name__ == "__main__":
-    data = read_file()
-    train_set, test_set = train_test_split("pima-folds.csv",1)
+    acc = cross_validation("pima-folds.csv","1NN",10)
+    print(acc)
+    # train_set, test_set = train_test_split("pima-folds.csv",10)
+    # #a = accuracy(train_set,test_set,"NB")
+    # print(test_set)
+
 
 
 
