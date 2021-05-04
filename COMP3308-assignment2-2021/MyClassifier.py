@@ -19,7 +19,7 @@ def read_file(fname):
 
 #fold: how many folds in total
 #create pima_folds.csv
-def create_pima_folds_csv(data:list,fold:int):
+def create_pima_folds_csv(data,fold):
     seed(490581612)
     num = [i for i in range(len(data))]
     shuffle(num)
@@ -36,7 +36,6 @@ def create_pima_folds_csv(data:list,fold:int):
             set_data.append(data[j])
         dataset_split_data.append(set_data)
         set_data = []
-    test = []
     train = []
     test = dataset_split_data[0]
     for _data in dataset_split_data:
@@ -79,7 +78,7 @@ def train_test_split(fname,index):
 
 
 # train test are both vectors in Euclidean
-def Euclidean_distance(train_data:list,test_data:list):
+def Euclidean_distance(train_data,test_data):
 	sum = 0
 	for i in range(0,len(train_data)-1):
 		sum = sum + np.power(float(train_data[i])-float(test_data[i]),2)
@@ -245,24 +244,6 @@ def print_prediction(predict):
         print(pred)
 
 
-def main():
-
-
-    training_dt = get_data(training_file)
-    input_dt = get_data(input_file)
-
-    # create_fold_file(training_dt)
-
-    # test(training_dt)
-
-    for input in input_dt:
-        if methd == "NB":
-            NB(training_dt, input)
-        elif "NN" in methd:
-            k = methd[0]
-            k = int(k)
-            KNN(k, training_dt, input)
-
 
 if __name__ == "__main__":
     # acc = cross_validation("pima-folds.csv","1NN",10)
@@ -270,15 +251,14 @@ if __name__ == "__main__":
     train_set = read_file(sys.argv[1])
     test_set = read_file(sys.argv[2])
     model = str(sys.argv[3])
-    for test_data in test_set:
-        if model.endswith("NN"):  
-            k = int(model[0])
-            predict = KNN(k,train_set, test_set)
-            print_prediction(predict)
-        elif model == "NB":
-            predict = NB(train_set,test_set)
-            # print_prediction(predict)
-            print(len(predict))
+    if model.endswith("NN"):  
+        k = int(model[0])
+        predict = KNN(k,train_set, test_set)
+        print_prediction(predict)
+    elif model == "NB":
+        predict = NB(train_set,test_set)
+        print_prediction(predict)
+
 
 
 
