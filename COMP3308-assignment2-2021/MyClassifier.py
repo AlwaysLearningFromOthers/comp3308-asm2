@@ -245,12 +245,41 @@ def print_prediction(predict):
         print(pred)
 
 
+def main():
+
+
+    training_dt = get_data(training_file)
+    input_dt = get_data(input_file)
+
+    # create_fold_file(training_dt)
+
+    # test(training_dt)
+
+    for input in input_dt:
+        if methd == "NB":
+            NB(training_dt, input)
+        elif "NN" in methd:
+            k = methd[0]
+            k = int(k)
+            KNN(k, training_dt, input)
+
+
 if __name__ == "__main__":
-    acc = cross_validation("pima-folds.csv","1NN",10)
-    print(acc)
-    # train_set, test_set = train_test_split("pima-folds.csv",10)
-    # #a = accuracy(train_set,test_set,"NB")
-    # print(test_set)
+    # acc = cross_validation("pima-folds.csv","1NN",10)
+    # print(acc)
+    train_set = read_file(sys.argv[1])
+    test_set = read_file(sys.argv[2])
+    model = str(sys.argv[3])
+    for test_data in test_set:
+        if model.endswith("NN"):  
+            k = int(model[0])
+            predict = KNN(k,train_set, test_set)
+            print_prediction(predict)
+        elif model == "NB":
+            predict = NB(train_set,test_set)
+            # print_prediction(predict)
+            print(len(predict))
+
 
 
 
