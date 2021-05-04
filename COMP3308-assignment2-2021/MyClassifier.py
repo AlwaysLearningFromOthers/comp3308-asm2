@@ -42,13 +42,19 @@ def create_pima_folds_csv(data:list,fold:int):
     for _data in dataset_split_data:
         train.append(_data)
     with open('pima-folds.csv', 'w', newline='') as f:
-        wr = csv.writer(f, quoting=csv.QUOTE_NONE)
+        wr = csv.writer(f, quoting=csv.QUOTE_NONE,escapechar = ' ')
         i = 1
         for fold in train:
-            wr.writerow(["fold"+str(i)])
-            i+=1
-            for row in fold:
-                wr.writerow(row)
+            if i!=1:
+                wr.writerow(["\n"+"fold"+str(i)])
+                i+=1
+                for row in fold:
+                    wr.writerow(row)
+            else:
+                wr.writerow(["fold"+str(i)])
+                i+=1
+                for row in fold:
+                    wr.writerow(row)
 
 #train test dataset split
 def train_test_split(fname,index):
@@ -56,16 +62,17 @@ def train_test_split(fname,index):
     test = []
     data = read_file(fname)
     for line in data:
-        if ''.join(line).startswith('fold') and int(''.join(line)[-1])!= int(str(index)[-1]):
-            set = 0
-            continue
-        if ''.join(line).startswith('fold') and int(''.join(line)[-1])== int(str(index)[-1]):
-            set = 1
-            continue
-        if set==0:
-            train.append(line)
-        elif set ==1:
-            test.append(line)
+        if ''.join(line).strip() != "":
+            if ''.join(line).startswith('fold') and int(''.join(line)[-1])!= int(str(index)[-1]):
+                set = 0
+                continue
+            if ''.join(line).startswith('fold') and int(''.join(line)[-1])== int(str(index)[-1]):
+                set = 1
+                continue
+            if set==0:
+                train.append(line)
+            elif set ==1:
+                test.append(line)
     return train, test
 
 
