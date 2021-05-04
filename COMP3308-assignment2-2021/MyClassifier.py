@@ -22,7 +22,7 @@ def read_file(fname):
 def create_pima_folds_csv(data,fold):
     seed(490581612)
     num = [i for i in range(len(data))]
-    shuffle(num)
+    #shuffle(num)
     step = len(data)//fold
     left = len(data)%fold
     dataset_split_index = [num[i:i+step] for i in range(0,len(num),step)]
@@ -37,7 +37,7 @@ def create_pima_folds_csv(data,fold):
         dataset_split_data.append(set_data)
         set_data = []
     train = []
-    test = dataset_split_data[0]
+    #test = dataset_split_data[0]
     for _data in dataset_split_data:
         train.append(_data)
     with open('pima-folds.csv', 'w', newline='') as f:
@@ -54,6 +54,8 @@ def create_pima_folds_csv(data,fold):
                 i+=1
                 for row in fold:
                     wr.writerow(row)
+    
+                
 
 #train test dataset split
 def train_test_split(fname,index):
@@ -214,7 +216,7 @@ def NB(train,test):
 
 
 #performance of models
-def accuracy(train_set:list,test_set:list,model:str):
+def accuracy(train_set,test_set,model):
     #split the data
     label = [i[-1] for i in test_set]
     num_same = 0
@@ -246,6 +248,7 @@ def print_prediction(predict):
 
 
 if __name__ == "__main__":
+    #create_pima_folds_csv(read_file("pima.csv"),10)
     # acc = cross_validation("pima-folds.csv","1NN",10)
     # print(acc)
     train_set = read_file(sys.argv[1])
