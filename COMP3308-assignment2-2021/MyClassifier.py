@@ -7,8 +7,6 @@ from random import shuffle, seed
 
 n_yes = 0
 n_no = 0
-pima ="pima.csv"
-pima_folds = "pima-folds"
 def read_file(fname):
     cwd = os.getcwd()
     with open(cwd + "/" +fname) as f:
@@ -22,7 +20,7 @@ def read_file(fname):
 def create_pima_folds_csv(data,fold):
     seed(490581612)
     num = [i for i in range(len(data))]
-    #shuffle(num)
+    shuffle(num)
     step = len(data)//fold
     left = len(data)%fold
     dataset_split_index = [num[i:i+step] for i in range(0,len(num),step)]
@@ -88,7 +86,7 @@ def Euclidean_distance(train_data,test_data):
 	return np.sqrt(sum)
 
 
-#KNN Model    
+# #KNN Model    
 def KNN(k,train, test):
     predict = []
     for test_data in test:
@@ -208,6 +206,7 @@ def NB(train,test):
             if p != 0:
                 x_no = x_no * p
         #prediction labels
+
         if x_no > x_yes:
             predict.append("no")
         else:
@@ -246,10 +245,9 @@ def print_prediction(predict):
         print(pred)
 
 
-
 if __name__ == "__main__":
-    #create_pima_folds_csv(read_file("pima.csv"),10)
-    # acc = cross_validation("pima-folds.csv","1NN",10)
+    # create_pima_folds_csv(read_file("pima.csv"),10)
+    # acc = cross_validation("pima-folds.csv","NB",10)
     # print(acc)
     train_set = read_file(sys.argv[1])
     test_set = read_file(sys.argv[2])
@@ -258,9 +256,10 @@ if __name__ == "__main__":
         k = int(model[0])
         predict = KNN(k,train_set, test_set)
         print_prediction(predict)
-    elif model == "NB":
+    elif model.strip() == "NB":
         predict = NB(train_set,test_set)
         print_prediction(predict)
+
 
 
 
