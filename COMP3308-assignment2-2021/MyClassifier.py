@@ -53,13 +53,52 @@ def create_pima_folds_csv(data1,fold):
                 writer.writerow(item)
             writer.writerow("")
 
+
+
+def create_pima_cfs_folds_csv(data1,fold):
+    #size = int(len(data))
+    #fold_size = int(size / fold)
+    fold = []
+    temp = []
+
+    no_data = []
+    yes_data = []
+    for data in data1:
+        if data[len(data) - 1] == "no":
+            no_data.append(data)
+        else:
+            yes_data.append(data)
+
+    for i in range(0, 10):
+        temp1 = []
+        for j in range(0, 50):
+            temp1.append(no_data[j + i * 50])
+        if i == 8:
+            for k in range(0, 26):
+                temp1.append(yes_data[k + 216])
+        elif i == 9:
+            for k in range(0, 26):
+                temp1.append(yes_data[k + 242])
+        else:
+            for k in range(0, 27):
+                temp1.append(yes_data[k + i * 27])
+        temp.append(temp1)
+
+    with open('pima-CFS-folds.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        for i in range(0, 10):
+            writer.writerow(["fold" + str(i + 1)])
+            for item in temp[i]:
+                writer.writerow(item)
+            writer.writerow("")
+
 #train test dataset split
 def train_test_split(fname,index):
     train = []
     test = []
     data = read_file(fname)
     for line in data:
-        if ''.join(line).strip() != "":
+        if ''.join(line).strip() != '':
             if ''.join(line).startswith('fold') and int(''.join(line)[-1])!= int(str(index)[-1]):
                 set = 0
                 continue
@@ -116,8 +155,10 @@ def KNN(k,train, test_data):
     
     if n_yes >= n_no:
         print("yes")
+        #return "yes"
     else:
         print("no")
+        #return "no"
 
 
 # mean of yes and no for one column
@@ -202,36 +243,44 @@ def NB(train,instance):
 
     if x_no > x_yes:
         print("no")
+        #return "no"
     else:
         print("yes")
+        #return "yes"
 
 
 
-# #performance of models
-# def accuracy(train_set,test_set,model):
-#     #split the data
-#     label = [i[-1] for i in test_set]
-#     num_same = 0
-#     #prediction based on model
-#     if str(model).endswith("NN"):  
-#         k = int(model[0])
-#         predict = KNN(k,train_set, test_set)
-#     elif model == "NB":
-#         predict = NB(train_set,test_set)
-#     #accuracy og model
-#     for i in range(0,len(predict)):
-#             if predict[i] == label[i]:
-#                 num_same += 1
-#     perc = num_same/len(predict)
-#     return perc
+#performance of models
+def accuracy(train_set,test_set,model):
+    #split the data
+    label = [i[-1] for i in test_set]
+    num_same = 0
+    predict = []
+    #prediction based on model
+    if model.endswith("NN"):  
+        k = int(model[0])
+        for test_data in test_set:
+            predict.append(KNN(k,train_set, test_data))
+    elif model.strip() == "NB":
+        for test_data in test_set:
+            predict.append(NB(train_set,test_data))
+    #accuracy og model
+    for i in range(0,len(predict)):
+            if predict[i] == label[i]:
+                num_same += 1
+    perc = num_same/len(predict)
+    return perc
 
-# def cross_validation(fname,model,fold):
-#     percent_vector = []
-#     for i in range(1,fold):
-#         train_set,test_set = train_test_split(fname,i)
-#         percentage = accuracy(train_set, test_set, model)
-#         percent_vector.append(percentage)
-#     return np.mean(percent_vector)
+def cross_validation(fname,model,fold):
+    percent_vector = []
+    sum_value = 0
+    for i in range(1,fold):
+        train_set,test_set = train_test_split(fname,i)
+        percentage = accuracy(train_set, test_set, model)
+        percent_vector.append(percentage)
+        sum_value += percentage
+    
+    return sum_value/len(percent_vector)
 
 
 if __name__ == "__main__":
@@ -245,4 +294,14 @@ if __name__ == "__main__":
     elif model.strip() == "NB":
         for test_data in test_set:
             NB(train_set,test_data)
-    #create_pima_folds_csv(read_file("pima.csv"),10)
+    # # create_pima_folds_csv(read_file("pima.csv"),10)
+    # # create_pima_cfs_folds_csv(read_file("pima-CFS.csv"),10)
+    # train_set, test_set = train_test_split("pima-folds.csv",2)
+    # print(cross_validation("pima-folds.csv","NB",10))
+    # print(cross_validation("pima-folds.csv","1NN",10))
+    # print(cross_validation("pima-folds.csv","5NN",10))
+    # print("after CFS")
+    # print(cross_validation("pima-CFS-folds.csv","NB",10))
+    # print(cross_validation("pima-CFS-folds.csv","1NN",10))
+    # print(cross_validation("pima-CFS-folds.csv","5NN",10))
+    # # cross_validation("pima-folds.csv","1NN",10)
